@@ -124,6 +124,9 @@ namespace Helios
 
         private static void ImageSaveToBlobProcess(string item)
         {
+            // Read the Azure storage details
+          AzureStorageConfig azureStorageConfig = new AzureStorageConfig() { AccountKey = _configuration.GetSection("AzureStorageConfig")["AccountKey"], AccountName = _configuration.GetSection("AzureStorageConfig")["AccountName"], ImageContainer = _configuration.GetSection("AzureStorageConfig")["ImageContainer"] };
+
             var fileFullpath = item.Split('\\');
             var batchId = fileFullpath[fileFullpath.Length - 2];
             var month = fileFullpath[fileFullpath.Length - 3];

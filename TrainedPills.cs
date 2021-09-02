@@ -43,13 +43,13 @@ namespace Helios
                     string[] allfiles = Directory.GetFiles(mainDirectoryPath, "*.*", SearchOption.AllDirectories);
                     foreach (var item in allfiles)
                     {
-                        ImageSaveToBlobProcess(item);
+                        ImageSaveToBlobProcess(item, azureStorageConfig);
                     }
                 }
 
             }
         }
-        private static void ImageSaveToBlobProcess(string item)
+        private static void ImageSaveToBlobProcess(string item, AzureStorageConfig azureStorageConfig)
         {
             var fileFullpath = item.Split('\\');
             var batchId = fileFullpath[fileFullpath.Length - 2];
