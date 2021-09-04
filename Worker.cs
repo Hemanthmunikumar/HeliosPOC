@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,10 +12,11 @@ namespace Helios
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-
-        public Worker(ILogger<Worker> logger)
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        public Worker(ILogger<Worker> logger, IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -22,8 +24,8 @@ namespace Helios
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                TrainedPills.TrainedPillsProcess();
-                await Task.Delay(1000, stoppingToken);
+                TrainedPills.TrainedPillsProcess(_serviceScopeFactory);
+                await Task.Delay(600000, stoppingToken); //TODO change the trigger interval
             }
         }
     }

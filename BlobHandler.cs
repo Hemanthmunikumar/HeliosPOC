@@ -30,7 +30,6 @@ namespace Helios
 
             // Upload the file
             await blobClient.UploadAsync(fileStream);
-
             return await Task.FromResult(true);
         }
 

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -153,13 +154,30 @@ namespace Helios
             var destinationPath = $"{DateTime.UtcNow.Year}/{DateTime.UtcNow.Month}/{DateTime.UtcNow.Day}/{filename}";
             return destinationPath;
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var host = Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration(c =>
+                {
+                    c.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    //var optionsBuilder = new DbContextOptionsBuilder<PostgreDbContext>();
+                    //optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Username=postgres;Password=007;Database=poc");
+                    //services.AddScoped<PostgreDbContext>(s => new PostgreDbContext(optionsBuilder.Options));
+
                     services.AddHostedService<Worker>();
                 });
+
+            return host;
+        }
+        //public static IHostBuilder CreateHostBuilder(string[] args) =>
+        //    Host.CreateDefaultBuilder(args)
+
+        //        .ConfigureServices((hostContext, services) =>
+        //        {
+        //            services.AddHostedService<Worker>();
+        //        });
     }
 }
