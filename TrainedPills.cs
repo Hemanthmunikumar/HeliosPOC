@@ -155,7 +155,7 @@ namespace Helios
                 Console.WriteLine("Started Image file creating process {0}", fileInfo.Name);
                 // Read the data from database
                 blobResponse = BlobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageConfig).GetAwaiter().GetResult();
-                Console.WriteLine("Created Image file in blob {0}", fileName);
+                Console.WriteLine("Created Image file in blob {0}", fileInfo.Name);
             }
             // Delete file if response success
             if (blobResponse)
