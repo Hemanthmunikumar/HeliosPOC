@@ -25,7 +25,7 @@ namespace Helios
             {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 TrainedPills.TrainedPillsProcess(_serviceScopeFactory);
-                await Task.Delay(600000, stoppingToken); //TODO change the trigger interval
+                await Task.Delay(10000, stoppingToken); //TODO change the trigger interval //20000=20sec
             }
         }
     }
