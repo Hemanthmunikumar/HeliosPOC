@@ -14,9 +14,9 @@ namespace Helios
         public int? Pathmonth { get; set; }
         // key=pouchid_batchid_month_year
         public string HastSetKey { get => _hashSetKey; }
-        public void SetHashSetKey(string Pouchid, int? Fkbatch, int? Pathmonth, int? Pathyear)
+        public void SetHashSetKey(string Pouchid)
         {
-            _hashSetKey = $"{Pouchid}_{Fkbatch}_{Pathmonth}_{Pathyear}";
+            _hashSetKey = $"{Pouchid}";
         }
     }
 

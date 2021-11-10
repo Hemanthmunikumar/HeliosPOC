@@ -56,3 +56,13 @@ SELECT public.get_pouch_details(
 select jsondeposited,csvdeposited,* from tblpouch  WHERE pouchid in ('01000Z7K010T','01000Z7K010O','01000Z7K0103','01000Z7K0104');
 --UPDATE tblpouch SET jsondeposited=FALSE,csvdeposited=FALSE WHERE pouchid  in ('01000Z7K010T','01000Z7K010O','01000Z7K0103','01000Z7K0104');
 	
+	
+	--Local
+	"(1003,010013MH0103,1001,2020,2)"
+"(1004,010013MH0104,1001,2020,2)"
+"(1005,010013MH0105,1001,2020,2)"
+	select jsondeposited,csvdeposited,* from tblpouch  WHERE pouchid in ('010013MH0103','010013MH0104','010013MH0105');
+--UPDATE tblpouch SET jsondeposited=FALSE,csvdeposited=FALSE WHERE pouchid  in ('010013MH0103','010013MH0104','010013MH0105');
+SELECT public.get_pouch_details(
+	'010013MH0102','1001'
+)

@@ -23,8 +23,11 @@ namespace Helios
         private static string _folderPath;
         private static PouchVM _pouchVM = new PouchVM();
         private static List<PouchDetailsVM> _pouchDetailsVM = new List<PouchDetailsVM>();
+        private static List<DepositDataJSON> _depositDataJSONVM = new List<DepositDataJSON>();
         //private static Dictionary<string,PouchVM> _dbPouches = new Dictionary<string, PouchVM>();
         private static AzureStorageConfig _azureStorageConfig;
+        private static AzureStorageConfig _azureStorageImageConfig;
+        private static string _storageImageFolder;
         //private static IServiceScopeFactory _serviceScopeFactory;
         #endregion
 
@@ -43,6 +46,8 @@ namespace Helios
             _configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", true, true).Build();
             //Read the Azure storage details
             _azureStorageConfig = new AzureStorageConfig() { AccountKey = _configuration.GetSection("AzureStorageConfig")["AccountKey"], AccountName = _configuration.GetSection("AzureStorageConfig")["AccountName"], ImageContainer = _configuration.GetSection("AzureStorageConfig")["ImageContainer"] };
+            _azureStorageImageConfig = new AzureStorageConfig() { AccountKey = _configuration.GetSection("AzureStorageImageConfig")["AccountKey"], AccountName = _configuration.GetSection("AzureStorageImageConfig")["AccountName"], ImageContainer = _configuration.GetSection("AzureStorageImageConfig")["ImageContainer"] };
+            _storageImageFolder = _configuration.GetSection("AzureStorageImageConfig")["ImageFolder"];
             _folderPath = _configuration.GetSection("HeliosConfig")["FolderPath"];
             Console.WriteLine("Images process folder path: {0}", _folderPath);
             // Read the Drug names
@@ -61,14 +66,23 @@ namespace Helios
                 {
                     Console.WriteLine("Directory exist: {0}", _folderPath);
                     var di = new DirectoryInfo(_folderPath);
-                    var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => q.Name.Contains("_") && extensions.Contains(q.Extension.ToLower()))
-                                      let fileName = file.Name.Split('_')[0]
-                                      let fileFullpath = file.FullName.Split('\\')
+                    //var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => q.Name.Contains("_") && extensions.Contains(q.Extension.ToLower()))
+                    //                  let fileName = file.Name.Split('_')[0]
+                    //                  let fileFullpath = file.FullName.Split('\\')
+                    //                  // key=pouchid_batchid_month_year
+                    //                  let HashSetKey = $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}"
+                    //                  select new { fileName, file.FullName, HashSetKey })
+                    //                 .GroupBy(x => x.fileName)
+                    //                 .Where(g => g.Count() <= 2)
+                    //                 .ToDictionary(g => g.Key, g => g.ToList());
+                    var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
+                                      let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
+                                      //let fileFullpath = file.FullName.Split('\\')
                                       // key=pouchid_batchid_month_year
-                                      let HashSetKey = $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}"
+                                      let HashSetKey = $"{fileName}"
                                       select new { fileName, file.FullName, HashSetKey })
                                      .GroupBy(x => x.fileName)
-                                     .Where(g => g.Count() <= 2)
+                                     // .Where(g => g.Count() <= 2)
                                      .ToDictionary(g => g.Key, g => g.ToList());
                     // Get DB pouches
                     Console.WriteLine("Get the Pouchs by drug names");
@@ -78,7 +92,8 @@ namespace Helios
                     foreach (var fileGroup in fileGroups)
                     {
 
-                        _pouchDetailsVM = new List<PouchDetailsVM>();
+                        //_pouchDetailsVM = new List<PouchDetailsVM>();
+                        _depositDataJSONVM = new List<DepositDataJSON>();
                         foreach (var item in fileGroup.Value)
                         {
                             try
@@ -90,7 +105,8 @@ namespace Helios
                                     _pouchVM = pouchVM;
                                     if (_pouchDetailsVM.Count == 0)
                                     {
-                                        _pouchDetailsVM = GetPouchDetails();
+                                        //_pouchDetailsVM = GetPouchDetails();
+                                        _depositDataJSONVM = GetDepositDataJSONDetails();
                                     }
                                     ImageSaveToBlobProcess(item.FullName);
                                     Console.WriteLine("Pouch image process completed {0}", pouchVM.Pouchid);
@@ -135,7 +151,7 @@ namespace Helios
             FileInfo fileInfo = new FileInfo(item);
             var fullPouchId = Path.GetFileNameWithoutExtension(item);
             var blobResponse = false;
-            var filepath = $"{_pouchVM.Pathyear}/{_pouchVM.Pathmonth}/{_pouchVM.Fkbatch}/";
+            var filepath = _storageImageFolder;// $"{_pouchVM.Pathyear}/{_pouchVM.Pathmonth}/{_pouchVM.Fkbatch}/";
             //
             // var pouchIds = new List<string>();
             //int.TryParse(batchId, out int batchIdNumber);
@@ -148,13 +164,13 @@ namespace Helios
             //{
 
             //}
-            var result = GetPouchDetailsToUploadFilesBlob(_pouchVM.Fkbatch.Value, fullPouchId, filepath, _azureStorageConfig);
+            var result = GetPouchDetailsToUploadFilesBlob(_pouchVM.Fkbatch.Value, fullPouchId, filepath, _azureStorageImageConfig);
 
             using (var filestream = System.IO.File.OpenRead(item))
             {
                 Console.WriteLine("Started Image file creating process {0}", fileInfo.Name);
                 // Read the data from database
-                blobResponse = BlobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageConfig).GetAwaiter().GetResult();
+                blobResponse = BlobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageImageConfig).GetAwaiter().GetResult();
                 Console.WriteLine("Created Image file in blob {0}", fileInfo.Name);
             }
             // Delete file if response success
@@ -175,12 +191,20 @@ namespace Helios
         private static bool GetPouchDetailsToUploadFilesBlob(int batchId, string fulPouchId, string filepath, AzureStorageConfig azureStorageConfig)
         {
             var resonse = false;
-            if (_pouchDetailsVM.Count() > 0)
+            //if (_pouchDetailsVM.Count() > 0)
+            //{
+            //    Console.WriteLine("Pouch details found {0}, pouchid is ", _pouchVM.Pouchid);
+            //    resonse = true;
+            //    CSVHelper.UploadCSVFileToBlob(_pouchDetailsVM, $"{filepath}{fulPouchId}", azureStorageConfig);
+            //    CSVHelper.UploadJSONFileToBlob(_pouchDetailsVM, $"{filepath}{fulPouchId}", azureStorageConfig);
+            //    //Console.WriteLine("Pouch details saved to blob {0}", _pouchVM.Pouchid);
+            //}
+            if (_depositDataJSONVM.Count() > 0)
             {
                 Console.WriteLine("Pouch details found {0}, pouchid is ", _pouchVM.Pouchid);
                 resonse = true;
-                CSVHelper.UploadCSVFileToBlob(_pouchDetailsVM, $"{filepath}{fulPouchId}", azureStorageConfig);
-                CSVHelper.UploadJSONFileToBlob(_pouchDetailsVM, $"{filepath}{fulPouchId}", azureStorageConfig);
+                //CSVHelper.UploadCSVFileToBlob(_depositDataJSONVM, $"{filepath}{fulPouchId}", azureStorageConfig);
+                CSVHelper.UploadJSONFileToBlob(_depositDataJSONVM, $"{filepath}{fulPouchId}", azureStorageConfig);
                 //Console.WriteLine("Pouch details saved to blob {0}", _pouchVM.Pouchid);
             }
             return resonse;
@@ -231,7 +255,7 @@ namespace Helios
                     {
                         pouch.Pathmonth = Convert.ToInt32(reader["r_pathmonth"]);
                     }
-                    pouch.SetHashSetKey(pouch.Pouchid, pouch.Fkbatch, pouch.Pathmonth, pouch.Pathyear);
+                    pouch.SetHashSetKey(pouch.Pouchid);
                     pouchs.Add(pouch);
                 }
             }
@@ -283,6 +307,92 @@ namespace Helios
                 }
             }
             return pouchDetails;
+        }
+
+        private static List<DepositDataJSON> GetDepositDataJSONDetails()
+        {
+            List<DepositDataJSON> pouchDetails = new List<DepositDataJSON>();
+            using (var npgsqlConnection = GetPGConnection())
+            {
+                npgsqlConnection.Open();
+
+                Npgsql.NpgsqlCommand cmd = new Npgsql.NpgsqlCommand("get_pouch_details", npgsqlConnection);
+                cmd.Parameters.AddWithValue(new NpgsqlParameter("p_pouchid", NpgsqlDbType.Varchar)).Value = _pouchVM.Pouchid;// "03407568";
+                cmd.Parameters.AddWithValue(new NpgsqlParameter("p_batchid", NpgsqlDbType.Integer)).Value = _pouchVM.Fkbatch;//1003;
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    var pouch = new DepositDataJSON();
+                    var id = Convert.ToInt32(reader["R_id"]);
+                    pouch.pouch_id = Convert.ToString(reader["R_pouchid"]);
+                    pouch.barcode = Convert.ToString(reader["R_pouchid"]);
+                    pouch.pouch_number = Convert.ToString(reader["R_tracepacketid"]);
+                    pouch.pouch_size = Convert.ToString(reader["R_concat"]);
+                    pouch.pouch_packaged_date = Convert.ToString(reader["R_to_char"]);
+                    pouch.administration_date = Convert.ToString(reader["R_intakedate"]);
+                    pouch.administration_time = Convert.ToString(reader["R_intaketime"]);
+                    //TODO Need dynamic below values
+                    pouch.patient = new PatientVM() { patient_name = "Helios Test 3",patient_id= 22075, patient_facility= "Perl" , patient_facility_code= "Retail" };
+                    pouch.drug = GetDrugs(id);
+
+                    pouch.random_deposit = false;
+                    pouch.new_drug =true;
+                    pouch.human_pass = true;
+                    //pouch.packet_situation = "Missing";
+                    pouch.order_type = "Multidose";
+                    pouch.pouch_type = "Order";
+                    //if (reader["R_repaired"] != null)
+                    //{ pouch.Repaired = Convert.ToBoolean(reader["R_repaired"]); }
+                    //pouch.StringAgg = Convert.ToString(reader["R_string_agg"]);
+                    if (reader["R_ok"] != null)
+                    { pouch.algo_pass = Convert.ToBoolean(reader["R_ok"]); }
+                    //if (reader["R_userok"] != null)
+                    //{ pouch.human_pass = Convert.ToBoolean(reader["R_userok"]); }
+                    if (!string.IsNullOrEmpty(Convert.ToString(reader["R_situationnew"])))
+                    {
+                        pouch.packet_situation = Convert.ToInt32(reader["R_situationnew"]);
+                    }
+                    if (reader["R_randfrac"] != null)
+                    {
+                        var randfracc = float.Parse(Convert.ToString(reader["R_randfrac"]), CultureInfo.InvariantCulture.NumberFormat);
+                    }
+                    pouchDetails.Add(pouch);
+                }
+            }
+            return pouchDetails;
+        }
+
+        private static List<DrugVM> GetDrugs(int id)
+        {
+            List<DrugVM> drugDetails = new List<DrugVM>();
+            using (var npgsqlConnection = GetPGConnection())
+            {
+                npgsqlConnection.Open();
+
+                Npgsql.NpgsqlCommand cmd = new Npgsql.NpgsqlCommand("get_drug_details", npgsqlConnection);
+                cmd.Parameters.AddWithValue(new NpgsqlParameter("p_pouchid", NpgsqlDbType.Integer)).Value = id;// "03407568";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    var drugData = new DrugVM();
+                    drugData.drug_code = Convert.ToString(reader["R_drug_code"]);
+                    drugData.drug_quantity = Convert.ToString(reader["R_drug_quantity"]);
+                    drugData.generic_name = Convert.ToString(reader["R_generic_name"]);
+                    drugData.dispenseMethod = "1:15";
+                    drugData.commercial_name = "NOT FOR PACKETS";
+                    drugData.strength = "0.625MG/5MG";
+                    drugData.shape = "oblong";
+                    drugData.color = "BLUE";
+                    drugData.imprint = "PREMPRO0.625/5";
+                    drugData.imprint2 = null;                  
+                    drugDetails.Add(drugData);
+                }
+            }
+            return drugDetails;
         }
         /// <summary>
         /// 

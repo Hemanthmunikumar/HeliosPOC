@@ -11,7 +11,7 @@ namespace Helios
 {
     public static class CSVHelper
     {
-        public static bool UploadCSVFileToBlob(List<PouchDetailsVM> pouchDetails, string fileName, AzureStorageConfig azureStorageConfig)
+        public static bool UploadCSVFileToBlob(List<DepositDataJSON> pouchDetails, string fileName, AzureStorageConfig azureStorageConfig)
         {
             Console.WriteLine("Started CSV file creating process {0}", fileName);
             byte[] bin;
@@ -32,11 +32,11 @@ namespace Helios
             }
             return blobResponse;
         }
-        public static bool UploadJSONFileToBlob(List<PouchDetailsVM> pouchDetails, string fileName, AzureStorageConfig azureStorageConfig)
+        public static bool UploadJSONFileToBlob(List<DepositDataJSON> pouchDetails, string fileName, AzureStorageConfig azureStorageConfig)
         {
             Console.WriteLine("Started JSON file creating process {0}", fileName);
             var blobResponse = false;
-            var data = JsonConvert.SerializeObject(pouchDetails);
+            var data = JsonConvert.SerializeObject(pouchDetails[0]);
             using (MemoryStream stream = new MemoryStream())
             using (TextWriter textWriter = new StreamWriter(stream))
             {
