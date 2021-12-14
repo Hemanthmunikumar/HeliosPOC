@@ -21,12 +21,12 @@ namespace Helios
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
+            //while (!stoppingToken.IsCancellationRequested)
+            //{
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 TrainedPills.TrainedPillsProcess(_serviceScopeFactory);
-                await Task.Delay(10000, stoppingToken); //TODO change the trigger interval //20000=20sec
-            }
+               // await Task.Delay(10000, stoppingToken); //TODO change the trigger interval //20000=20sec
+            //}
         }
     }
 }

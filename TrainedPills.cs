@@ -57,10 +57,13 @@ namespace Helios
             {
                 Console.WriteLine("Collected drug names count: {0}", _trainedPillItems.Count);
                 _drugNames = string.Join(",", _trainedPillItems.AsEnumerable().Select(r => r.name).ToList());
-
+                if (!Directory.Exists("/app/DemoImages"))
+                {
+                    Console.WriteLine("Directory not exist: /app/DemoImages");
+                }
                 // Read the files from directory
                 //string App = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
+                //var path = Server.MapPath("~/app/backend");
                 var extensions = new List<string> { ".jpg" };
                 if (Directory.Exists(_folderPath))
                 {
