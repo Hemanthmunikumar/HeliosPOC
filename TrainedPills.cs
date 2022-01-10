@@ -57,9 +57,9 @@ namespace Helios
             {
                 Console.WriteLine("Collected drug names count: {0}", _trainedPillItems.Count);
                 _drugNames = string.Join(",", _trainedPillItems.AsEnumerable().Select(r => r.name).ToList());
-                if (!Directory.Exists("/app/DemoImages"))
+                if (!Directory.Exists("/app/Pouchimages"))
                 {
-                    Console.WriteLine("Directory not exist: /app/DemoImages");
+                    Console.WriteLine("Directory not exist: /app/Pouchimages");
                 }
                 // Read the files from directory
                 //string App = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -127,8 +127,8 @@ namespace Helios
                     }
 
                     //Delete Empty folders
-                    di.DeleteEmptyDirs();
-                    Console.WriteLine("Deleted empty folders if any.");
+                   // di.DeleteEmptyDirs();
+                    //Console.WriteLine("Deleted empty folders if any.");
                     //string[] allfiles = Directory.GetFiles(mainDirectoryPath, "*.*", SearchOption.AllDirectories);
                     //foreach (var item in allfiles)
                     //{
@@ -176,12 +176,12 @@ namespace Helios
                 blobResponse = BlobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageImageConfig).GetAwaiter().GetResult();
                 Console.WriteLine("Created Image file in blob {0}", fileInfo.Name);
             }
-            // Delete file if response success
-            if (blobResponse)
-            {
-                fileInfo.Delete();
-                Console.WriteLine("Image deleted {0}", fileInfo.FullName);
-            }
+            //// Delete file if response success
+            //if (blobResponse)
+            //{
+            //    fileInfo.Delete();
+            //    Console.WriteLine("Image deleted {0}", fileInfo.FullName);
+            //}
 
         }
         /// <summary>

@@ -11,8 +11,8 @@ docker run -it *****(Azure ACR name).azurecr.io/helios:latest cmd.exe
 --mount folder
 https://channel9.msdn.com/Blogs/containers/Container-Fundamentals--Part-3-Shared-Folders
 docker images
-docker run -it -v c:\DemoImages:c:\DockerDemoImages (ImageId) cmd
-docker run -it -v c:\DemoImages:c:\app\DemoImages 4e9fec23c7a5 cmd
+docker run -it -v c:\Pouchimages:c:\DockerDemoImages (ImageId) cmd
+docker run -it -v c:\Pouchimages:c:\app\Pouchimages 4e9fec23c7a5 cmd
 
 --PgAdmin process
 https://lchsk.com/how-to-connect-to-a-host-postgres-database-from-a-docker-container.html
@@ -79,8 +79,9 @@ docker pull pillpouchpredictiondemo.azurecr.io/helios:linux
 step:2 Run the image
 docker run -d pillpouchpredictiondemo.azurecr.io/helios:linux
 
-step:3 Mount the C:\DemoImages to linux folder /app/DemoImages
-docker run -it --rm --name mount-images --mount type=bind,source=C:\DemoImages,target=/app/DemoImages b883fb31610f
+step:3 Mount the C:\Pouchimages to linux folder /app/Pouchimages 
+docker run -it --rm --name mount-images --mount type=bind,source=C:\Pouchimages,target=/app/Pouchimages cce19ad263c1
+Note: Command prompt run the docker images command to get the Docker image id.
 
 step:4 Check pgadmin to process images
 		1)Fetch the All pouchs by drugs
