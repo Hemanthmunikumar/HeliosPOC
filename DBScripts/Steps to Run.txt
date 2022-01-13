@@ -79,7 +79,7 @@ docker pull pillpouchpredictiondemo.azurecr.io/helios:linux
 step:2 Run the image
 docker run -d pillpouchpredictiondemo.azurecr.io/helios:linux
 
-step:3 Mount the C:\Pouchimages to linux folder /app/Pouchimages 
+step:3 Mount the P:\Pouchimages to linux folder /app/Pouchimages 
 docker run -it --rm --name mount-images --mount type=bind,source=C:\Pouchimages,target=/app/Pouchimages cce19ad263c1
 Note: Command prompt run the docker images command to get the Docker image id.
 
