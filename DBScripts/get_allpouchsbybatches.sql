@@ -1,5 +1,10 @@
+-- FUNCTION: public.get_allpouchsbybatches(character varying, character varying)
+
+-- DROP FUNCTION public.get_allpouchsbybatches(character varying, character varying);
+
 CREATE OR REPLACE FUNCTION public.get_allpouchsbybatches(
-	p_drugnames character varying,p_batches character varying)
+	p_drugnames character varying,
+	p_batches character varying)
     RETURNS TABLE(r_id integer, r_pouchid character varying, r_fkbatch integer, r_pathyear integer, r_pathmonth integer) 
     LANGUAGE 'plpgsql'
 
@@ -62,10 +67,10 @@ and tblbatch.isdone = TRUE
 and tblpouch.csvdeposited = FALSE 
 and trainablemeds.count > 0 
 and ( (tblpouch.colorimagedeposited = TRUE and tblpouch.monoimagedeposited = TRUE)
-	 or tblpouch.fkbatch in (p_batches)
+	 or tblpouch.fkbatch = any(string_to_array(p_batches, ',')::int[])
 	); 
 END;
 $BODY$;
 
-ALTER FUNCTION public.get_allpouchsbybatches(character varying,character varying)
+ALTER FUNCTION public.get_allpouchsbybatches(character varying, character varying)
     OWNER TO postgres;

@@ -78,88 +78,126 @@ namespace Helios
                     //                 .GroupBy(x => x.fileName)
                     //                 .Where(g => g.Count() <= 2)
                     //                 .ToDictionary(g => g.Key, g => g.ToList());
-                    var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
-                                      let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
-                                      let fileFullpath = file.FullName.Split('\\')
-                                      // key=pouchid_batchid_month_year
-                                      let batchId = $"{ fileFullpath[fileFullpath.Length - 2]}"
-                                      let HashSetKey = $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}"
-                                      select new BathImages { FileName = fileName, FileFullName = file.FullName, HashSetKey = HashSetKey, Fkbatch = batchId })
-                                     .GroupBy(x => x.HashSetKey)
-                                     .ToDictionary(g => g.Key, g => g.ToList());
-                    //var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
-                    //                  let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
-                    //                  //let fileFullpath = file.FullName.Split('\\')
-                    //                  // key=pouchid_batchid_month_year
-                    //                  let HashSetKey = $"{fileName}"
-                    //                  select new { fileName, file.FullName, HashSetKey })
-                    //                 .GroupBy(x => x.fileName)
-                    //                 // .Where(g => g.Count() <= 2)
-                    //                 .ToDictionary(g => g.Key, g => g.ToList());
+                    //Console.WriteLine("Directory loop path");
+                    //foreach (var item in di.GetDirectories())
+                    //{
+                    //    Console.WriteLine("Directory name: {0}", item.FullName);
+                    //}
+                    //Console.WriteLine("Directory loop end");
+                    //var files = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
+                    //             let fileName = file.Name
+                    //             let fileFullpath = file.FullName
+                    //             select new BathImages { FileName = fileName, FileFullName = file.FullName }).ToList();
+                    //foreach (var item in files)
+                    //{
+                    //    Console.WriteLine("Image full name: {0}", item.FileFullName);
+                    //}
 
-                    //Get bathes
-                    var folderImageBatches = string.Join(",", fileGroups.Values.Select(q => q.FirstOrDefault().Fkbatch).Distinct().ToList());
-                    // Get DB pouches
-                    Console.WriteLine("Get the Pouchs by drug names");
-                    var _dbPouches = GetPouchs(folderImageBatches);
-                    //.GroupBy(p => p.HastSetKey, StringComparer.OrdinalIgnoreCase)
-                    //            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
-                    //Console.WriteLine("Pouchs by drug names");
-                    foreach (var pouchVM in _dbPouches)
+                    try
                     {
+                        //var ss = "/app/Pouchimages/2021/6/1046/014II30P040A0AM.jpg";
+                        //var s = ss.Split("/");
+                        //var batchIds = (ss.Length > 2) ? $"{ ss[ss.Length - 2]}" : string.Empty;
 
-                        //_pouchDetailsVM = new List<PouchDetailsVM>();
-                        _depositDataJSONVM = new List<DepositDataJSON>();
-                        try
+                        // /app/Pouchimages/2021/6/1046/014II30P040A0AM.jpg
+                        var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
+                                          let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
+                                          let fileFullpath = file.FullName.Split("/") //TODO: Linux format slipt /. If windows change to \\.
+                                          // key=pouchid_batchid_month_year
+                                          let batchId = (fileFullpath.Length > 2) ? $"{ fileFullpath[fileFullpath.Length - 2]}" : string.Empty
+                                          let HashSetKey = (fileFullpath.Length > 4) ? $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}" : string.Empty
+                                          select new BathImages { FileName = fileName, FileFullName = file.FullName, HashSetKey = HashSetKey, Fkbatch = batchId })
+                                   .GroupBy(x => x.HashSetKey)
+                                   .ToDictionary(g => g.Key, g => g.ToList());
+
+                        //var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
+                        //                  let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
+                        //                  let fileFullpath = file.FullName.Split('\\')
+                        //                  // key=pouchid_batchid_month_year
+                        //                  let batchId = $"{ fileFullpath[fileFullpath.Length - 2]}"
+                        //                  let HashSetKey = $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}"
+                        //                  select new BathImages { FileName = fileName, FileFullName = file.FullName, HashSetKey = HashSetKey, Fkbatch = batchId })
+                        //                 .GroupBy(x => x.HashSetKey)
+                        //                 .ToDictionary(g => g.Key, g => g.ToList());
+                        //var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
+                        //                  let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
+                        //                  //let fileFullpath = file.FullName.Split('\\')
+                        //                  // key=pouchid_batchid_month_year
+                        //                  let HashSetKey = $"{fileName}"
+                        //                  select new { fileName, file.FullName, HashSetKey })
+                        //                 .GroupBy(x => x.fileName)
+                        //                 // .Where(g => g.Count() <= 2)
+                        //                 .ToDictionary(g => g.Key, g => g.ToList());
+
+                        //Get bathes
+                        var folderImageBatches = string.Join(",", fileGroups.Values.Select(q => q.FirstOrDefault().Fkbatch).Distinct().ToList());
+                        // Get DB pouches
+                        Console.WriteLine("Get the Pouchs by drug names");
+                        var _dbPouches = GetPouchs(folderImageBatches);
+                        //.GroupBy(p => p.HastSetKey, StringComparer.OrdinalIgnoreCase)
+                        //            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+                        //Console.WriteLine("Pouchs by drug names");
+                        foreach (var pouchVM in _dbPouches)
                         {
-                            fileGroups.TryGetValue(pouchVM.HastSetKey, out var fileGroup);
-                            if (fileGroup != null)
+
+                            //_pouchDetailsVM = new List<PouchDetailsVM>();
+                            _depositDataJSONVM = new List<DepositDataJSON>();
+                            try
                             {
-                                Console.WriteLine($"Started Pouch {pouchVM.Pouchid} images to process");
-                                _pouchVM = pouchVM;
-                                if (_pouchDetailsVM.Count == 0)
+                                fileGroups.TryGetValue(pouchVM.HastSetKey, out var fileGroup);
+                                if (fileGroup != null)
                                 {
-                                    //_pouchDetailsVM = GetPouchDetails();
-                                    _depositDataJSONVM = GetDepositDataJSONDetails();
-                                }
-                                if (_depositDataJSONVM.Count > 0)
-                                {
-                                    var result = GetPouchDetailsToUploadFilesBlob(_pouchVM.Fkbatch.Value, pouchVM.Pouchid, _storageImageFolder, _azureStorageImageConfig);
-                                }
-                                else
-                                {
-                                    Console.WriteLine($"JSON data not found for pouch {pouchVM.Pouchid}");
-                                }
+                                    Console.WriteLine($"Started Pouch {pouchVM.Pouchid} images to process");
+                                    _pouchVM = pouchVM;
+                                    if (_pouchDetailsVM.Count == 0)
+                                    {
+                                        //_pouchDetailsVM = GetPouchDetails();
+                                        _depositDataJSONVM = GetDepositDataJSONDetails();
+                                    }
+                                    if (_depositDataJSONVM.Count > 0)
+                                    {
+                                        var result = GetPouchDetailsToUploadFilesBlob(_pouchVM.Fkbatch.Value, pouchVM.Pouchid, _storageImageFolder, _azureStorageImageConfig);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"JSON data not found for pouch {pouchVM.Pouchid}");
+                                    }
 
-                                foreach (var item in fileGroup)
-                                {
-                                    ImageSaveToBlobProcess(item.FileFullName);
+                                    foreach (var item in fileGroup)
+                                    {
+                                        ImageSaveToBlobProcess(item.FileFullName);
+                                    }
+
+                                    Console.WriteLine($"Pouch {pouchVM.Pouchid} images process completed");
+
+
                                 }
-
-                                Console.WriteLine($"Pouch {pouchVM.Pouchid} images process completed");
-
 
                             }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("Error when reading file process: {0}", ex);
+                                continue;
+                            }
+
+
 
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("Error when reading file process: {0}", ex);
-                            continue;
-                        }
 
-
+                        //Delete Empty folders
+                        // di.DeleteEmptyDirs();
+                        //Console.WriteLine("Deleted empty folders if any.");
+                        //string[] allfiles = Directory.GetFiles(mainDirectoryPath, "*.*", SearchOption.AllDirectories);
+                        //foreach (var item in allfiles)
+                        //{
+                        //    ImageSaveToBlobProcess(item, azureStorageConfig);
+                        //}
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("error {0}", ex);
 
                     }
-
-                    //Delete Empty folders
-                    // di.DeleteEmptyDirs();
-                    //Console.WriteLine("Deleted empty folders if any.");
-                    //string[] allfiles = Directory.GetFiles(mainDirectoryPath, "*.*", SearchOption.AllDirectories);
-                    //foreach (var item in allfiles)
-                    //{
-                    //    ImageSaveToBlobProcess(item, azureStorageConfig);
-                    //}
                 }
                 else
                 {
