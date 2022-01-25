@@ -11,7 +11,7 @@ namespace Helios
 {
     public static class CSVHelper
     {
-        public static bool UploadCSVFileToBlob(List<DepositDataJSON> pouchDetails, string fileName, AzureStorageConfig azureStorageConfig)
+        public static bool UploadCSVFileToBlob(List<CSVPouchData> pouchDetails, string fileName, AzureStorageConfig azureStorageConfig)
         {
             Console.WriteLine("Started CSV file creating process {0}", fileName);
             byte[] bin;
