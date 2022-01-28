@@ -55,7 +55,7 @@ left join
 	select tblpillinpouch.fkpouch, count(*)
 	from tblpillinpouch
 	left join tblmedication on tblmedication.id = tblpillinpouch.fkmedication
-	where tblmedication.uniqueidentifier not in (p_drugnames)
+	where tblmedication.uniqueidentifier !=all(string_to_array(p_drugnames, ',')::character varying[])
 	group by fkpouch
 ) trainablemeds on trainablemeds.fkpouch = tblpouch.id 
 
