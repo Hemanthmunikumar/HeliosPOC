@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE FUNCTION public.get_pouch_details_type_csv(
 	p_pouchid integer)
-    RETURNS TABLE(relativedirpath text, filename text, class text, xmin integer, ymin integer, xmax integer, ymax integer) 
+    RETURNS TABLE(relativedirpath character varying,class text, xmin integer, ymin integer, xmax integer, ymax integer) 
     LANGUAGE 'plpgsql'
 
     COST 100
@@ -16,8 +16,7 @@ BEGIN
 return query
 select
 
-concat(pathyear,'\',pathmonth,'\',pathfk,'\') relativedirpath,
-concat(pouchid, '.jpg') filename, 
+uniqueidentifier drugcode,
 
 case
 when uniqueidentifier like '%/_%' then 'partialTablet'
@@ -34,7 +33,7 @@ from tblpouch pouch
 
 left join tblpillinpouch pill on pill.fkpouch = pouch.id
 left join tblpillfound pillcoord on pillcoord.fkpillinpouch = pill.id
-left join tblmedication med on med.id = pill.fkmedication 
+join tblmedication med on med.id = pill.fkmedication 
 
 where pouch.id = p_pouchid; 
 END;

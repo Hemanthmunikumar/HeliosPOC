@@ -22,6 +22,7 @@ namespace Helios
         private static string _drugNames;
         private static string _folderPath;
         private static bool _isCsvFileProcess;
+        private static bool _isMonoImagesUpload;
         //private static PouchVM _pouchVM = new PouchVM();
         //private static List<PouchDetailsVM> _pouchDetailsVM = new List<PouchDetailsVM>();
         //private static List<DepositDataJSON> _depositDataJSONVM = new List<DepositDataJSON>();
@@ -54,6 +55,9 @@ namespace Helios
 
             bool.TryParse(_configuration.GetSection("HeliosConfig")["IsCsvFileProcess"], out bool csvFlag);
             _isCsvFileProcess = csvFlag;
+
+            bool.TryParse(_configuration.GetSection("HeliosConfig")["IsMonoImagesUpload"], out bool isMonoImageFlag);
+            _isMonoImagesUpload = isMonoImageFlag;
 
             Console.WriteLine("Images process folder path: {0}", _folderPath);
             // Read the Drug names
@@ -108,11 +112,11 @@ namespace Helios
                         // /app/Pouchimages/2021/6/1046/014II30P040A0AM.jpg
                         var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => extensions.Contains(q.Extension.ToLower()))
                                           let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
-                                          let fileFullpath = file.FullName.Split("/") //TODO: Linux format slipt /. If windows change to \\.
+                                          let fileFullpath = file.FullName.Split(_configuration.GetSection("HeliosConfig")["DirectorySplit"]) //TODO: Linux format slipt /. If windows change to \\.
                                           // key=pouchid_batchid_month_year
                                           let batchId = (fileFullpath.Length > 2) ? $"{ fileFullpath[fileFullpath.Length - 2]}" : string.Empty
                                           let HashSetKey = (fileFullpath.Length > 4) ? $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}" : string.Empty
-                                          select new BathImages { FileName = fileName, FileFullName = file.FullName, HashSetKey = HashSetKey, Fkbatch = batchId })
+                                          select new BathImages { FileName = file.Name.Split(".")[0], FileFullName = file.FullName, HashSetKey = HashSetKey, Fkbatch = batchId })
                                    .GroupBy(x => x.HashSetKey)
                                    .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -161,7 +165,7 @@ namespace Helios
 
                                     if (jsonPouchDetails.Count > 0)
                                     {
-                                        CSVHelper.UploadJSONFileToBlob(jsonPouchDetails, $"{_storageImageFolder}{pouchVM.Pouchid}", _azureStorageImageConfig);
+                                        CSVHelper.UploadJSONFileToBlob(jsonPouchDetails, $"{_storageImageFolder}{pouchVM.Pouchid}C", _azureStorageImageConfig);
                                     }
                                     else
                                     {
@@ -172,7 +176,7 @@ namespace Helios
                                         csvPouchDetails = GetTypeCSVPouchDetails(pouchVM.Id.Value);
                                         if (csvPouchDetails.Count > 0)
                                         {
-                                            CSVHelper.UploadCSVFileToBlob(csvPouchDetails, $"{_storageImageFolder}{pouchVM.Pouchid}", _azureStorageImageConfig);
+                                            CSVHelper.UploadCSVFileToBlob(csvPouchDetails, $"{_storageImageFolder}{pouchVM.Pouchid}C", _azureStorageImageConfig);
                                         }
                                         else
                                         {
@@ -185,7 +189,8 @@ namespace Helios
                                     }
                                     foreach (var item in fileGroup)
                                     {
-                                        ImageSaveToBlobProcess(item.FileFullName);
+                                        if ((_isMonoImagesUpload && char.ToUpperInvariant(item.FileName.Last()) == char.ToUpperInvariant(char.Parse("M"))) || char.ToUpperInvariant(item.FileName.Last()) != char.ToUpperInvariant(char.Parse("M")))
+                                            ImageSaveToBlobProcess(item.FileFullName);
                                     }
 
                                     Console.WriteLine($"Pouch {pouchVM.Pouchid} images process completed");
@@ -472,8 +477,8 @@ namespace Helios
                     while (reader.Read())
                     {
                         var pouch = new CSVPouchData();
-                        pouch.relativedirpath = Convert.ToString(reader["relativedirpath"]);
-                        pouch.filename = Convert.ToString(reader["filename"]);
+                        pouch.drugcode = Convert.ToString(reader["drugcode"]);
+                        //pouch.filename = Convert.ToString(reader["filename"]);
                         pouch.class_data = Convert.ToString(reader["class"]);
                         if (!string.IsNullOrEmpty(Convert.ToString(reader["xmin"])))
                         {

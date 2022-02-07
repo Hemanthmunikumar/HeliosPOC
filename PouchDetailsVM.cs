@@ -65,8 +65,8 @@ namespace Helios
     }
     public class CSVPouchData
     {
-        public string relativedirpath { get; set; }
-        public string filename { get; set; }
+        public string drugcode { get; set; }
+        //public string filename { get; set; }
         public string class_data  { get; set; }
         public int xmin { get; set; }
         public int ymin { get; set; }

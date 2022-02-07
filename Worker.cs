@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,12 +22,14 @@ namespace Helios
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //while (!stoppingToken.IsCancellationRequested)
-            //{
+           var _configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", true, true).Build();
+            int.TryParse(_configuration.GetSection("HeliosConfig")["JobScheduleInterval"], out int jobInterval);
+            while (!stoppingToken.IsCancellationRequested)
+            {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 TrainedPills.TrainedPillsProcess(_serviceScopeFactory);
-               // await Task.Delay(10000, stoppingToken); //TODO change the trigger interval //20000=20sec
-            //}
+                await Task.Delay(jobInterval, stoppingToken); //TODO change the trigger interval //20000=20sec
+            }
         }
     }
 }
