@@ -108,9 +108,11 @@ namespace Helios.BO
 
                 while (reader.Read())
                 {
-                    var pouch = new PouchVM();
-                    pouch.Id = Convert.ToInt32(reader["r_id"]);
-                    pouch.Pouchid = Convert.ToString(reader["r_pouchid"]);
+                    var pouch = new PouchVM
+                    {
+                        Id = Convert.ToInt32(reader["r_id"]),
+                        Pouchid = Convert.ToString(reader["r_pouchid"])
+                    };
                     if (!string.IsNullOrEmpty(Convert.ToString(reader["r_fkbatch"])))
                     {
                         pouch.Fkbatch = Convert.ToInt32(reader["r_fkbatch"]);
@@ -152,38 +154,38 @@ namespace Helios.BO
                 {
                     var pouch = new DepositDataJSON();
                     var id = Convert.ToInt32(reader["R_id"]);
-                    pouch.pouch_id = Convert.ToString(reader["R_pouchid"]);
-                    pouch.barcode = Convert.ToString(reader["R_pouchid"]);
-                    pouch.pouch_number = Convert.ToString(reader["R_tracepacketid"]);
-                    pouch.pouch_size = Convert.ToString(reader["R_concat"]);
-                    pouch.pouch_packaged_date = Convert.ToString(reader["R_to_char"]);
-                    pouch.administration_date = Convert.ToString(reader["R_intakedate"]);
-                    pouch.administration_time = Convert.ToString(reader["R_intaketime"]);
+                    pouch.Pouch_id = Convert.ToString(reader["R_pouchid"]);
+                    pouch.Barcode = Convert.ToString(reader["R_pouchid"]);
+                    pouch.Pouch_number = Convert.ToString(reader["R_tracepacketid"]);
+                    pouch.Pouch_size = Convert.ToString(reader["R_concat"]);
+                    pouch.Pouch_packaged_date = Convert.ToString(reader["R_to_char"]);
+                    pouch.Administration_date = Convert.ToString(reader["R_intakedate"]);
+                    pouch.Administration_time = Convert.ToString(reader["R_intaketime"]);
                     //TODO Need dynamic below values
-                    pouch.patient = new PatientVM() { patient_name = "Helios Test 3", patient_id = 22075, patient_facility = "Perl", patient_facility_code = "Retail" };
-                    pouch.drug = GetDrugs(id);
+                    pouch.Patient = new PatientVM() { Patient_name = "Helios Test 3", Patient_id = 22075, Patient_facility = "Perl", Patient_facility_code = "Retail" };
+                    pouch.Drug = GetDrugs(id);
 
-                    pouch.random_deposit = false;
-                    pouch.new_drug = true;
-                    pouch.human_pass = true;
+                    pouch.Random_deposit = false;
+                    pouch.New_drug = true;
+                    pouch.Human_pass = true;
                     //pouch.packet_situation = "Missing";
-                    pouch.order_type = "Multidose";
-                    pouch.pouch_type = "Order";
+                    pouch.Order_type = "Multidose";
+                    pouch.Pouch_type = "Order";
                     //if (reader["R_repaired"] != null)
                     //{ pouch.Repaired = Convert.ToBoolean(reader["R_repaired"]); }
                     //pouch.StringAgg = Convert.ToString(reader["R_string_agg"]);
                     if (reader["R_ok"] != null)
-                    { pouch.algo_pass = Convert.ToBoolean(reader["R_ok"]); }
+                    { pouch.Algo_pass = Convert.ToBoolean(reader["R_ok"]); }
                     //if (reader["R_userok"] != null)
                     //{ pouch.human_pass = Convert.ToBoolean(reader["R_userok"]); }
                     if (!string.IsNullOrEmpty(Convert.ToString(reader["R_situationnew"])))
                     {
-                        pouch.packet_situation = Convert.ToInt32(reader["R_situationnew"]);
+                        pouch.Packet_situation = Convert.ToInt32(reader["R_situationnew"]);
                     }
-                    if (reader["R_randfrac"] != null)
-                    {
-                        var randfracc = float.Parse(Convert.ToString(reader["R_randfrac"]), CultureInfo.InvariantCulture.NumberFormat);
-                    }
+                    //if (reader["R_randfrac"] != null)
+                    //{
+                    //    var randfracc = float.Parse(Convert.ToString(reader["R_randfrac"]), CultureInfo.InvariantCulture.NumberFormat);
+                    //}
                     pouchDetails.Add(pouch);
                 }
             }
@@ -199,8 +201,6 @@ namespace Helios.BO
             List<CSVPouchData> pouchDetails = new List<CSVPouchData>();
             try
             {
-
-
                 using (var npgsqlConnection = GetPGConnection())
                 {
                     npgsqlConnection.Open();
@@ -212,29 +212,30 @@ namespace Helios.BO
 
                     while (reader.Read())
                     {
-                        var pouch = new CSVPouchData();
-                        pouch.drugcode = Convert.ToString(reader["drugcode"]);
-                        //pouch.filename = Convert.ToString(reader["filename"]);
-                        pouch.class_data = Convert.ToString(reader["class"]);
+                        var pouch = new CSVPouchData
+                        {
+                            Drugcode = Convert.ToString(reader["drugcode"]),
+                            Class_data = Convert.ToString(reader["class"])
+                        };
                         if (!string.IsNullOrEmpty(Convert.ToString(reader["xmin"])))
                         {
 
-                            pouch.xmin = Convert.ToInt32(reader["xmin"]);
+                            pouch.Xmin = Convert.ToInt32(reader["xmin"]);
                         }
                         if (!string.IsNullOrEmpty(Convert.ToString(reader["ymin"])))
                         {
 
-                            pouch.ymin = Convert.ToInt32(reader["ymin"]);
+                            pouch.Ymin = Convert.ToInt32(reader["ymin"]);
                         }
                         if (!string.IsNullOrEmpty(Convert.ToString(reader["xmax"])))
                         {
 
-                            pouch.xmax = Convert.ToInt32(reader["xmax"]);
+                            pouch.Xmax = Convert.ToInt32(reader["xmax"]);
                         }
                         if (!string.IsNullOrEmpty(Convert.ToString(reader["ymax"])))
                         {
 
-                            pouch.ymax = Convert.ToInt32(reader["ymax"]);
+                            pouch.Ymax = Convert.ToInt32(reader["ymax"]);
                         }
 
                         pouchDetails.Add(pouch);
@@ -266,17 +267,19 @@ namespace Helios.BO
 
                 while (reader.Read())
                 {
-                    var drugData = new DrugVM();
-                    drugData.drug_code = Convert.ToString(reader["R_drug_code"]);
-                    drugData.drug_quantity = Convert.ToString(reader["R_drug_quantity"]);
-                    drugData.generic_name = Convert.ToString(reader["R_generic_name"]);
-                    drugData.dispenseMethod = "1:15";
-                    drugData.commercial_name = "NOT FOR PACKETS";
-                    drugData.strength = "0.625MG/5MG";
-                    drugData.shape = "oblong";
-                    drugData.color = "BLUE";
-                    drugData.imprint = "PREMPRO0.625/5";
-                    drugData.imprint2 = null;
+                    var drugData = new DrugVM
+                    {
+                        Drug_code = Convert.ToString(reader["R_drug_code"]),
+                        Drug_quantity = Convert.ToString(reader["R_drug_quantity"]),
+                        Generic_name = Convert.ToString(reader["R_generic_name"]),
+                        DispenseMethod = "1:15",
+                        Commercial_name = "NOT FOR PACKETS",
+                        Strength = "0.625MG/5MG",
+                        Shape = "oblong",
+                        Color = "BLUE",
+                        Imprint = "PREMPRO0.625/5",
+                        Imprint2 = null
+                    };
                     drugDetails.Add(drugData);
                 }
             }
@@ -288,15 +291,13 @@ namespace Helios.BO
         /// <param name="item"></param>
         private void ImageSaveToBlobProcess(string item)
         {
-            FileInfo fileInfo = new FileInfo(item);
-            var fullPouchId = Path.GetFileNameWithoutExtension(item);
-            var blobResponse = false;
+            FileInfo fileInfo = new FileInfo(item);      
             var filepath = _storageImageFolder;
             using (var filestream = System.IO.File.OpenRead(item))
             {
                 _logger.LogInformation($"Image {fileInfo.Name} is saving to blob");
                 // Read the data from database
-                blobResponse = _blobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageImageConfig).GetAwaiter().GetResult();
+              var  blobResponse = _blobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageImageConfig).GetAwaiter().GetResult();
                 _logger.LogInformation($"Image {fileInfo.Name} saved to blob successfully.");
             }
         }
@@ -316,7 +317,7 @@ namespace Helios.BO
             if (_trainedPillItems.Count > 0)
             {
                 _logger.LogInformation("Collected drug names count: {0}", _trainedPillItems.Count);
-                _drugNames = string.Join(",", _trainedPillItems.AsEnumerable().Select(r => r.name).ToList());
+                _drugNames = string.Join(",", _trainedPillItems.AsEnumerable().Select(r => r.Name).ToList());
                 if (!Directory.Exists(_folderPath))
                 {
                     _logger.LogInformation("Directory not exist: " + _folderPath);

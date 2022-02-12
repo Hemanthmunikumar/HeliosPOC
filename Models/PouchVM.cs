@@ -7,7 +7,7 @@
         public string Pouchid { get; set; }
         public int? Fkbatch { get; set; }
         public int? Pathyear { get; set; }
-        public int? Pathmonth { get; set; }       
+        public int? Pathmonth { get; set; }
         public string HastSetKey { get => _hashSetKey; }
         public void SetHashSetKey(string Pouchid, int? Fkbatch, int? Pathmonth, int? Pathyear)
         {
