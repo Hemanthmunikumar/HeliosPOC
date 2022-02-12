@@ -19,7 +19,7 @@ namespace Helios
                                   ".blob.core.windows.net/" +
                                   _storageConfig.ImageContainer +
                                   "/" + fileName);
-         
+
             StorageSharedKeyCredential storageCredentials =
                 new StorageSharedKeyCredential(_storageConfig.AccountName, _storageConfig.AccountKey);
 
@@ -27,7 +27,7 @@ namespace Helios
             BlobClient blobClient = new BlobClient(blobUri, storageCredentials);
 
             // Upload the file
-            await blobClient.UploadAsync(fileStream,overwrite:true);
+            await blobClient.UploadAsync(fileStream, overwrite: true);
             return await Task.FromResult(true);
         }
 
@@ -53,7 +53,7 @@ namespace Helios
                     await blobClient.DownloadToAsync(memorystream);
                     byte[] result = memorystream.ToArray();
                     return Encoding.UTF8.GetString(result);
-                }             
+                }
             }
             return string.Empty;
         }

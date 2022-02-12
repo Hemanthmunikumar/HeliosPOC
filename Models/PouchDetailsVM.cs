@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Helios
 {
@@ -67,7 +65,7 @@ namespace Helios
     {
         public string drugcode { get; set; }
         //public string filename { get; set; }
-        public string class_data  { get; set; }
+        public string class_data { get; set; }
         public int xmin { get; set; }
         public int ymin { get; set; }
         public int xmax { get; set; }

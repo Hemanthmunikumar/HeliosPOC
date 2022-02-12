@@ -14,7 +14,7 @@ namespace Helios
         private readonly ILogger<Worker> _logger;
         private readonly IConfiguration _config;
         private readonly IPouchTrainedPills _pouchTrainedPills;
-        public Worker(ILogger<Worker> logger,  IConfiguration config, IPouchTrainedPills pouchTrainedPills)
+        public Worker(ILogger<Worker> logger, IConfiguration config, IPouchTrainedPills pouchTrainedPills)
         {
             _logger = logger;
             _config = config;
