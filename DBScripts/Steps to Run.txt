@@ -80,7 +80,7 @@ step:2 Run the image
 docker run -d pillpouchpredictiondemo.azurecr.io/helios:linux
 
 step:3 Mount the P:\Pouchimages to linux folder /app/Pouchimages 
-docker run -it --rm --name mount-images --mount type=bind,source=P:\Pouchimages,target=/app/Pouchimages e2898d05f071
+docker run -it --rm --name mount-images --mount type=bind,source=P:\Pouchimages,target=/app/Pouchimages 6880dd512ad2
 Note: Command prompt run the docker images command to get the Docker image id.
 
 step:4 Check pgadmin to process images
@@ -100,3 +100,13 @@ step:4 Check pgadmin to process images
 		UPDATE tblpouch SET jsondeposited=FALSE,csvdeposited=FALSE WHERE pouchid  in ('01000Z7K0104');
 
 step:5 : Code executed only once. So run step 3 every time if required to process images.
+
+
+/////Shared drive
+Install-Module -Name Az -Scope CurrentUser -Repository PSGAllery -Force
+az login
+ az acr login --name pillpouchpredictiondemo
+ docker pull pillpouchpredictiondemo.azurecr.io/helios:linux
+ docker run -d pillpouchpredictiondemo.azurecr.io/helios:linux
+docker volume create --driver local --opt type=cifs --opt device=//**.*.**.**/PouchImages --opt o=user=******,domain=****,password=******* pouchimages
+docker run -d --name mount-images -v pouchimages:/app/Pouchimages 6880dd512ad2

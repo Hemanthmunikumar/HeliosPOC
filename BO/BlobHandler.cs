@@ -1,6 +1,6 @@
 ﻿using Azure.Storage;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
+using Helios.Interfaces;
 using System;
 using System.IO;
 using System.Text;
@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Helios
 {
-    public static class BlobHandler
+    public class BlobHandler : IBlobHandler
     {
-        public static async Task<bool> UploadFileToStorage(Stream fileStream, string fileName,
+        public async Task<bool> UploadFileToStorage(Stream fileStream, string fileName,
                                                             AzureStorageConfig _storageConfig)
         {
             // Create a URI to the blob
@@ -19,9 +19,7 @@ namespace Helios
                                   ".blob.core.windows.net/" +
                                   _storageConfig.ImageContainer +
                                   "/" + fileName);
-
-            // Create StorageSharedKeyCredentials object by reading
-            // the values from the configuration (appsettings.json)
+         
             StorageSharedKeyCredential storageCredentials =
                 new StorageSharedKeyCredential(_storageConfig.AccountName, _storageConfig.AccountKey);
 
@@ -29,11 +27,11 @@ namespace Helios
             BlobClient blobClient = new BlobClient(blobUri, storageCredentials);
 
             // Upload the file
-            await blobClient.UploadAsync(fileStream);
+            await blobClient.UploadAsync(fileStream,overwrite:true);
             return await Task.FromResult(true);
         }
 
-        public static async Task<string> DownloadFileFromStorage(string fileName,
+        public async Task<string> DownloadFileFromStorage(string fileName,
                                                           AzureStorageConfig _storageConfig)
         {
             // Create a URI to the blob
@@ -43,8 +41,6 @@ namespace Helios
                                   _storageConfig.ImageContainer +
                                   "/" + fileName);
 
-            // Create StorageSharedKeyCredentials object by reading
-            // the values from the configuration (appsettings.json)
             StorageSharedKeyCredential storageCredentials =
                 new StorageSharedKeyCredential(_storageConfig.AccountName, _storageConfig.AccountKey);
 
@@ -57,12 +53,7 @@ namespace Helios
                     await blobClient.DownloadToAsync(memorystream);
                     byte[] result = memorystream.ToArray();
                     return Encoding.UTF8.GetString(result);
-                }
-                //BlobDownloadInfo download = await blobClient.DownloadAsync();
-                //byte[] result = new byte[download.ContentLength];
-                //await download.Content.ReadAsync(result, 0, (int)download.ContentLength);
-
-                //return Encoding.UTF8.GetString(result);
+                }             
             }
             return string.Empty;
         }
