@@ -201,45 +201,43 @@ namespace Helios.BO
             List<CSVPouchData> pouchDetails = new List<CSVPouchData>();
             try
             {
-                using (var npgsqlConnection = GetPGConnection())
+                using var npgsqlConnection = GetPGConnection();
+                npgsqlConnection.Open();
+
+                Npgsql.NpgsqlCommand cmd = new Npgsql.NpgsqlCommand("get_pouch_details_type_csv", npgsqlConnection);
+                cmd.Parameters.AddWithValue(new NpgsqlParameter("p_pouchid", NpgsqlDbType.Integer)).Value = pouchId;// "03407568";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                var reader = cmd.ExecuteReader();
+
+                while (reader.Read())
                 {
-                    npgsqlConnection.Open();
-
-                    Npgsql.NpgsqlCommand cmd = new Npgsql.NpgsqlCommand("get_pouch_details_type_csv", npgsqlConnection);
-                    cmd.Parameters.AddWithValue(new NpgsqlParameter("p_pouchid", NpgsqlDbType.Integer)).Value = pouchId;// "03407568";
-                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                    var reader = cmd.ExecuteReader();
-
-                    while (reader.Read())
+                    var pouch = new CSVPouchData
                     {
-                        var pouch = new CSVPouchData
-                        {
-                            Drugcode = Convert.ToString(reader["drugcode"]),
-                            Class_data = Convert.ToString(reader["class"])
-                        };
-                        if (!string.IsNullOrEmpty(Convert.ToString(reader["xmin"])))
-                        {
+                        Drugcode = Convert.ToString(reader["drugcode"]),
+                        Class_data = Convert.ToString(reader["class"])
+                    };
+                    if (!string.IsNullOrEmpty(Convert.ToString(reader["xmin"])))
+                    {
 
-                            pouch.Xmin = Convert.ToInt32(reader["xmin"]);
-                        }
-                        if (!string.IsNullOrEmpty(Convert.ToString(reader["ymin"])))
-                        {
-
-                            pouch.Ymin = Convert.ToInt32(reader["ymin"]);
-                        }
-                        if (!string.IsNullOrEmpty(Convert.ToString(reader["xmax"])))
-                        {
-
-                            pouch.Xmax = Convert.ToInt32(reader["xmax"]);
-                        }
-                        if (!string.IsNullOrEmpty(Convert.ToString(reader["ymax"])))
-                        {
-
-                            pouch.Ymax = Convert.ToInt32(reader["ymax"]);
-                        }
-
-                        pouchDetails.Add(pouch);
+                        pouch.Xmin = Convert.ToInt32(reader["xmin"]);
                     }
+                    if (!string.IsNullOrEmpty(Convert.ToString(reader["ymin"])))
+                    {
+
+                        pouch.Ymin = Convert.ToInt32(reader["ymin"]);
+                    }
+                    if (!string.IsNullOrEmpty(Convert.ToString(reader["xmax"])))
+                    {
+
+                        pouch.Xmax = Convert.ToInt32(reader["xmax"]);
+                    }
+                    if (!string.IsNullOrEmpty(Convert.ToString(reader["ymax"])))
+                    {
+
+                        pouch.Ymax = Convert.ToInt32(reader["ymax"]);
+                    }
+
+                    pouchDetails.Add(pouch);
                 }
             }
             catch (Exception ex)
@@ -291,15 +289,13 @@ namespace Helios.BO
         /// <param name="item"></param>
         private void ImageSaveToBlobProcess(string item)
         {
-            FileInfo fileInfo = new FileInfo(item);      
+            FileInfo fileInfo = new FileInfo(item);
             var filepath = _storageImageFolder;
-            using (var filestream = System.IO.File.OpenRead(item))
-            {
-                _logger.LogInformation($"Image {fileInfo.Name} is saving to blob");
-                // Read the data from database
-              var  blobResponse = _blobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageImageConfig).GetAwaiter().GetResult();
-                _logger.LogInformation($"Image {fileInfo.Name} saved to blob successfully.");
-            }
+            using var filestream = System.IO.File.OpenRead(item);
+            _logger.LogInformation($"Image {fileInfo.Name} is saving to blob");
+            // Read the data from database
+            var blobResponse = _blobHandler.UploadFileToStorage(filestream, $"{filepath}{fileInfo.Name}", _azureStorageImageConfig).GetAwaiter().GetResult();
+            _logger.LogInformation($"Image {fileInfo.Name} saved to blob successfully.");
         }
 
         /// <summary>
@@ -307,6 +303,7 @@ namespace Helios.BO
         /// </summary>
         private void PouchPillsProcess()
         {
+            int pouchProcessCount = 0;
             //Read the Azure storage details
             ReadConfigValues();
 
@@ -334,8 +331,8 @@ namespace Helios.BO
                         var fileGroups = (from file in di.EnumerateFiles("*", SearchOption.AllDirectories).Where(q => _extensions.Contains(q.Extension.ToLower()))
                                           let fileName = file.Name.Split(".")[0].Remove(file.Name.Split(".")[0].Length - 1, 1)
                                           let fileFullpath = file.FullName.Split(_configuration.GetSection("HeliosConfig")["DirectorySplit"]) //TODO: Linux format slipt /. If windows change to \\.
-                                          let batchId = (fileFullpath.Length > 2) ? $"{ fileFullpath[fileFullpath.Length - 2]}" : string.Empty
-                                          let HashSetKey = (fileFullpath.Length > 4) ? $"{fileName}_{fileFullpath[fileFullpath.Length - 2]}_{fileFullpath[fileFullpath.Length - 3]}_{fileFullpath[fileFullpath.Length - 4]}" : string.Empty
+                                          let batchId = (fileFullpath.Length > 2) ? $"{ fileFullpath[^2]}" : string.Empty
+                                          let HashSetKey = (fileFullpath.Length > 4) ? $"{fileName}_{fileFullpath[^2]}_{fileFullpath[^3]}_{fileFullpath[^4]}" : string.Empty
                                           select new BathImages { FileName = file.Name.Split(".")[0], FileFullName = file.FullName, HashSetKey = HashSetKey, Fkbatch = batchId })
                                    .GroupBy(x => x.HashSetKey)
                                    .ToDictionary(g => g.Key, g => g.ToList());
@@ -344,12 +341,17 @@ namespace Helios.BO
                         //Get bathes from folder images
                         var folderImageBatches = string.Join(",", fileGroups.Values.Select(q => q.FirstOrDefault().Fkbatch).Distinct().ToList());
                         // Get DB pouches
-                        _logger.LogInformation("Get the Pouchs by drug names");
+                        _logger.LogInformation("Get the Pouchs by batches");
                         var _dbPouches = GetPouchs(folderImageBatches);
-                        if (!_dbPouches.Any())
+                        if (_dbPouches.Any())
                         {
-                            _logger.LogInformation("There is no pouch images to process.");
+                            _logger.LogInformation($"Fethed {_dbPouches.Count()} pouches by batches.");
                         }
+                        else
+                        {
+                            _logger.LogInformation("There is no pouches to process.");
+                        }
+
                         foreach (var pouchVM in _dbPouches)
                         {
                             var jsonPouchDetails = new List<DepositDataJSON>();
@@ -359,6 +361,7 @@ namespace Helios.BO
                                 fileGroups.TryGetValue(pouchVM.HastSetKey, out var fileGroup);
                                 if (fileGroup != null)
                                 {
+                                    pouchProcessCount += pouchProcessCount;
                                     _logger.LogInformation($"Started Pouch {pouchVM.Pouchid} images to process");
 
                                     jsonPouchDetails = GetDepositDataJSONDetails(pouchVM.Pouchid, pouchVM.Fkbatch);
@@ -418,7 +421,11 @@ namespace Helios.BO
                 }
 
             }
-            _logger.LogInformation("Process completed successfully.");
+       
+                _logger.LogInformation("Processed pouches {0}.", pouchProcessCount);
+            
+                _logger.LogInformation("Process completed successfully.");
+
         }
         #endregion
     }

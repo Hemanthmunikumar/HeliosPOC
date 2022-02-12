@@ -48,12 +48,10 @@ namespace Helios
             BlobClient blobClient = new BlobClient(blobUri, storageCredentials);
             if (await blobClient.ExistsAsync())
             {
-                using (var memorystream = new MemoryStream())
-                {
-                    await blobClient.DownloadToAsync(memorystream);
-                    byte[] result = memorystream.ToArray();
-                    return Encoding.UTF8.GetString(result);
-                }
+                using var memorystream = new MemoryStream();
+                await blobClient.DownloadToAsync(memorystream);
+                byte[] result = memorystream.ToArray();
+                return Encoding.UTF8.GetString(result);
             }
             return string.Empty;
         }
